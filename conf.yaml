@@ -1,5 +1,7 @@
 port: 5000
 speedtest_url: https://speed.cloudflare.com/__down?during=download&bytes=104857600
-min_interval: 40
-max_interval: 80
+#下次执行最快分钟
+min_interval: 30
+#下次执行最慢分钟
+max_interval: 60
 vps_name: 我的xx

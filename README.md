@@ -8,7 +8,13 @@
 
 输入ip:5000访问
 
-![iShot_2024-09-15_23.20.28.png](https://s1.locimg.com/2024/09/15/2e7277c92db19.png)
+![](https://s1.locimg.com/2024/09/16/fded9aaa22508.png)
+
+#### docker运行资源占用
+
+docker镜像大小在27M左右，运行时占用系统内存25M左右。
+
+![](https://s1.locimg.com/2024/09/16/b050a4d1e0127.png)
 
 ## 开发
 
@@ -17,6 +23,11 @@
 ```shell
 curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'https://speed.cloudflare.com/__down?during=download&bytes=104857600'
 ```
+
+#### 开发环境
+
+- python 3.9
+- PyCharm
 
 #### 构建
 
@@ -52,12 +63,12 @@ docker push vvnocode/vpspeek:latest
 暂时使用docker，后续会增加脚本安装
 
 ```shell
-docker run -p 5000:5000 vvnocode/vpspeek:latest
+docker run --name vpspeek -p 5000:5000 vvnocode/vpspeek:latest
 ```
 
 如果需要将测速数据保存或者修改配置，先跑下容器，然后把要映射出来的文件拷贝出来再进行映射。
 ```shell
-docker run -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.json -v /mnt/user/appdata/vpspeek/vvnode/conf.yaml:/app/conf.yaml vvnocode/vpspeek:latest
+docker run --name vpspeek -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.json -v /mnt/user/appdata/vpspeek/vvnode/conf.yaml:/app/conf.yaml vvnocode/vpspeek:latest
 ```
 
 #### 配置
@@ -66,13 +77,11 @@ docker run -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.
 默认配置在极限情况下，每天测速下载最多4800M，最少2400M数据，且分散到24小时执行，并不会对服务器造成过大压力。
 
 ```yaml
+port: 5000
 speedtest_url: https://speed.cloudflare.com/__down?during=download&bytes=104857600
 #下次执行最快分钟
 min_interval: 30
 #下次执行最慢分钟
 max_interval: 60
+vps_name: 我的xx
 ```
-
-#### todo
-
-- 上传到github
