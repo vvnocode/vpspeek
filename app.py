@@ -1,27 +1,69 @@
-import datetime
-import yaml
-import json
 import os
-import random
+import shutil
+import sys
 import subprocess
+import random
+import datetime
+import json
 import threading
 
+from ruamel.yaml import YAML
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, jsonify, request, render_template
 
 app = Flask(__name__)
 
-# File and key to store speed test results and the next run time
-data_file = 'data.json'
-
-# Load configurations from conf.yaml
-with open('conf.yaml', 'r') as file:
-    conf = yaml.safe_load(file)
+# 初始化 YAML 解析器
+yaml = YAML()
+yaml.preserve_quotes = True  # 保留引号
 
 
+# 配置文件路径处理
+def resource_path(relative_path):
+    """ 获取资源文件路径，兼容开发和打包后的情况 """
+    try:
+        # 打包后，PyInstaller 创建临时文件夹，把路径存放于 _MEIPASS 中
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # 开发环境，使用当前文件的目录
+        base_path = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(base_path, relative_path)
+
+
+# 检查并加载/更新配置文件
+def load_or_create_config():
+    config_file = resource_path('conf.yaml')
+    default_config_file = resource_path('conf.yaml.default')
+
+    # 如果默认配置文件不存在，抛出异常
+    if not os.path.exists(default_config_file):
+        raise FileNotFoundError(f"默认配置文件 '{default_config_file}' 不存在！")
+
+    # 如果 conf.yaml 不存在，复制 conf.yaml.default
+    if not os.path.exists(config_file):
+        print(f"'{config_file}' 不存在，复制默认配置文件...")
+        shutil.copy(default_config_file, config_file)
+
+    # 读取默认配置
+    with open(default_config_file, 'r') as default_file:
+        default_conf = yaml.load(default_file)
+
+    # 读取用户配置（如果存在）
+    with open(config_file, 'r') as user_file:
+        user_conf = yaml.load(user_file)
+
+    merged_conf = merge_dicts(default_conf, user_conf)
+
+    # 保存合并后的配置到 conf.yaml
+    with open(config_file, 'w') as config_file_out:
+        yaml.dump(merged_conf, config_file_out)
+
+    return merged_conf
+
+
+# 加载数据
 def load_data():
     if not os.path.exists(data_file):
-        # If the file does not exist, create an initial structure
         data = {"results": [], "next_run": None}
         save_data(data)
     else:
@@ -34,11 +76,23 @@ def load_data():
     return data
 
 
+# 以默认配置为基础，用用户配置更新字段
+def merge_dicts(defaults, overrides):
+    for key, value in overrides.items():
+        if isinstance(value, dict) and key in defaults:
+            merge_dicts(defaults[key], value)
+        else:
+            defaults[key] = value
+    return defaults
+
+
+# 保存数据
 def save_data(data):
     with open(data_file, 'w') as fileIO:
         json.dump(data, fileIO, indent=4)
 
 
+# 测速函数
 def speed_test(triggered_by="auto"):
     result = subprocess.run(
         ["curl", "-o", "/dev/null", "-s", "-w", "%{size_download} %{time_total} %{speed_download}\n",
@@ -71,12 +125,14 @@ def speed_test(triggered_by="auto"):
     save_data(data)
 
 
+# 设置下一次运行时间
 def set_next_run(data):
     next_run_interval = random.randint(conf['min_interval'], conf['max_interval']) * 60
     next_run = datetime.datetime.now() + datetime.timedelta(seconds=next_run_interval)
     data["next_run"] = next_run.strftime('%Y-%m-%d %H:%M:%S')
 
 
+# 检查是否应该运行测速
 def check_run():
     data = load_data()
     if data["next_run"]:
@@ -84,10 +140,10 @@ def check_run():
         if datetime.datetime.now() >= next_run:
             speed_test()
     else:
-        # If next_run is None, trigger the speed test immediately
         speed_test()
 
 
+# Flask 路由
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -113,12 +169,19 @@ def trigger_speed_test():
     return jsonify({"message": "Speed test initiated"}), 202
 
 
+# 定时任务
 def run_scheduler():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(check_run, 'interval', seconds=10)  # Check every 10 seconds if it's time to run the speed test
+    scheduler.add_job(check_run, 'interval', seconds=10)
     scheduler.start()
 
 
 if __name__ == '__main__':
+    # 加载配置
+    conf = load_or_create_config()
+    # 数据文件路径
+    data_file = resource_path('data.json')
+    # 运行测速守护进程
     threading.Thread(target=run_scheduler).start()
+    # 启动Flask
     app.run(host='0.0.0.0', debug=False, port=conf['port'])
