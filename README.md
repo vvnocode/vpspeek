@@ -4,13 +4,13 @@
 - 可以配置在一个时间范围内随机选择下次执行时间，这样定时任务的特征会小一点。
 - 可以对测速结果查询、排序。
 
-#### 页面展示
+### 页面展示
 
 输入ip:5000访问
 
 ![](https://s1.locimg.com/2024/09/16/fded9aaa22508.png)
 
-#### docker运行资源占用
+### docker运行资源占用
 
 docker镜像大小在27M左右，运行时占用系统内存25M左右。
 
@@ -24,12 +24,14 @@ docker镜像大小在27M左右，运行时占用系统内存25M左右。
 curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'https://speed.cloudflare.com/__down?during=download&bytes=104857600'
 ```
 
-#### 开发环境
+### 开发环境
 
 - python 3.9
 - PyCharm
 
-#### 构建
+### 构建
+
+#### docker
 
 ```shell
 #分别构建amd64、arm64
@@ -56,11 +58,16 @@ docker push vvnocode/vpspeek:latest
 
 ```
 
+#### 二进制文件
+
+打包命令
+```shell
+pyinstaller --onefile --add-data "conf.yaml.default:." --add-data "templates:templates" app.py
+```
+
 ## 使用
 
-#### 安装
-
-暂时使用docker，后续会增加脚本安装
+### docker
 
 ```shell
 docker run --name vpspeek -p 5000:5000 vvnocode/vpspeek:latest
@@ -71,7 +78,13 @@ docker run --name vpspeek -p 5000:5000 vvnocode/vpspeek:latest
 docker run --name vpspeek -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.json -v /mnt/user/appdata/vpspeek/vvnode/conf.yaml:/app/conf.yaml vvnocode/vpspeek:latest
 ```
 
-#### 配置
+### 二进制文件
+
+```shell
+./vpspeek
+```
+
+### 配置
 
 默认配置即可使用，如需修改，请修改conf.yaml。
 默认配置在极限情况下，每天测速下载最多4800M，最少2400M数据，且分散到24小时执行，并不会对服务器造成过大压力。

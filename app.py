@@ -19,20 +19,26 @@ yaml.preserve_quotes = True  # 保留引号
 
 
 # 配置文件路径处理
-def resource_path(relative_path):
+def resource_path(relative_path, external=False):
     """ 获取资源文件路径，兼容开发和打包后的情况 """
-    try:
-        # 打包后，PyInstaller 创建临时文件夹，把路径存放于 _MEIPASS 中
-        base_path = sys._MEIPASS
-    except AttributeError:
-        # 开发环境，使用当前文件的目录
-        base_path = os.path.abspath(os.path.dirname(__file__))
-    return os.path.join(base_path, relative_path)
+    if external:
+        # 外部资源文件的路径（与可执行文件同目录）
+        return os.path.join(os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.abspath('.'),
+                            relative_path)
+    else:
+        # 内部资源文件路径（如 conf.yaml.default）
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(os.path.dirname(__file__))
+        return os.path.join(base_path, relative_path)
 
 
 # 检查并加载/更新配置文件
 def load_or_create_config():
-    config_file = resource_path('conf.yaml')
+    # 外部配置文件路径
+    config_file = resource_path('conf.yaml', external=True)
+    # 默认配置文件路径 (打包后存在于 MEIPASS 临时目录中)
     default_config_file = resource_path('conf.yaml.default')
 
     # 如果默认配置文件不存在，抛出异常
@@ -63,6 +69,7 @@ def load_or_create_config():
 
 # 加载数据
 def load_data():
+    data_file = resource_path('data.json', external=True)  # 确保 data.json 位于外部目录
     if not os.path.exists(data_file):
         data = {"results": [], "next_run": None}
         save_data(data)
@@ -76,6 +83,13 @@ def load_data():
     return data
 
 
+# 保存数据
+def save_data(data):
+    data_file = resource_path('data.json', external=True)  # 确保保存到外部路径
+    with open(data_file, 'w') as fileIO:
+        json.dump(data, fileIO, indent=4)
+
+
 # 以默认配置为基础，用用户配置更新字段
 def merge_dicts(defaults, overrides):
     for key, value in overrides.items():
@@ -84,12 +98,6 @@ def merge_dicts(defaults, overrides):
         else:
             defaults[key] = value
     return defaults
-
-
-# 保存数据
-def save_data(data):
-    with open(data_file, 'w') as fileIO:
-        json.dump(data, fileIO, indent=4)
 
 
 # 测速函数
@@ -179,8 +187,6 @@ def run_scheduler():
 if __name__ == '__main__':
     # 加载配置
     conf = load_or_create_config()
-    # 数据文件路径
-    data_file = resource_path('data.json')
     # 运行测速守护进程
     threading.Thread(target=run_scheduler).start()
     # 启动Flask

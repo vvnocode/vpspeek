@@ -163,3 +163,4 @@ cython_debug/
 
 # vpspeek
 data.json
+conf.yaml
