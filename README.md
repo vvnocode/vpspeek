@@ -3,6 +3,8 @@
 - 可以自动执行测速，也可以手动执行。
 - 可以配置在一个时间范围内随机选择下次执行时间，这样定时任务的特征会小一点。
 - 可以对测速结果查询、排序。
+- 可以配置运行模式，防止被人攻击
+- 支持一键安装&升级
 
 ### 页面展示
 
@@ -80,8 +82,9 @@ docker run --name vpspeek -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.
 
 ### 二进制文件
 
+
 ```shell
-./vpspeek
+curl -L https://raw.githubusercontent.com/vvnocode/vpspeek/master/install.sh -o vpspeek.sh && chmod +x vpspeek.sh && sudo ./vpspeek.sh
 ```
 
 ### 配置
@@ -90,11 +93,18 @@ docker run --name vpspeek -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.
 默认配置在极限情况下，每天测速下载最多4800M，最少2400M数据，且分散到24小时执行，并不会对服务器造成过大压力。
 
 ```yaml
+# 服务端口
 port: 5000
 speedtest_url: https://speed.cloudflare.com/__down?during=download&bytes=104857600
-#下次执行最快分钟
+# 下次执行最快分钟
 min_interval: 30
-#下次执行最慢分钟
+# 下次执行最慢分钟
 max_interval: 60
+# vps 名称
 vps_name: 我的xx
+# 模式
+# full：完整的功能，调用接口无安全验证；default：无安全验证，但是只能查询，关闭手动测速接口；safe：接口需要在header增加校验，参数为conf.yaml的key；
+mode:
+# 调用接口需要的key
+key:
 ```
