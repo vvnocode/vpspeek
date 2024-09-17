@@ -6,10 +6,11 @@ import random
 import datetime
 import json
 import threading
+import uuid  # 用于生成随机key
+from flask import Flask, jsonify, request, render_template, abort
 
 from ruamel.yaml import YAML
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask, jsonify, request, render_template
 
 app = Flask(__name__)
 
@@ -59,6 +60,16 @@ def load_or_create_config():
         user_conf = yaml.load(user_file)
 
     merged_conf = merge_dicts(default_conf, user_conf)
+
+    # 如果 conf.yaml 中没有 key 或 key 为空，生成一个随机的 key
+    if 'key' not in merged_conf or not merged_conf['key']:
+        merged_conf['key'] = str(uuid.uuid4())
+        print(f"生成新的API key: {merged_conf['key']}")
+
+    # 如果没有模式配置，默认为 'default'
+    if 'mode' not in merged_conf or not merged_conf['mode']:
+        merged_conf['mode'] = 'default'
+        print(f"设置模式为默认模式: {merged_conf['mode']}")
 
     # 保存合并后的配置到 conf.yaml
     with open(config_file, 'w') as config_file_out:
@@ -151,28 +162,64 @@ def check_run():
         speed_test()
 
 
+# 校验API请求的key
+def check_api_key():
+    api_key = request.headers.get('X-API-Key')
+    if conf.get('mode') == 'safe' and api_key != conf['key']:
+        abort(401, description="Unauthorized: Invalid API Key")
+
+
 # Flask 路由
 @app.route('/')
 def home():
+    # 校验key
+    check_api_key()
+
     return render_template('index.html')
 
 
 @app.route('/config', methods=['GET'])
 def get_config():
-    return jsonify(conf)
+    # 校验key
+    check_api_key()
+
+    # 只返回 min_interval、max_interval 和 vps_name 三个字段
+    return jsonify({
+        'min_interval': conf.get('min_interval'),
+        'max_interval': conf.get('max_interval'),
+        'vps_name': conf.get('vps_name')
+    })
 
 
-@app.route('/speeds', methods=['GET'])
-def get_speeds():
+@app.route('/data', methods=['GET'])
+def get_data():
+    # 校验key
+    check_api_key()
+
     sort_key = request.args.get('sort_by', 'timestamp')
     sort_order = request.args.get('sort_order', 'desc')
+
     data = load_data()
+    # 按请求的字段排序结果
     results = sorted(data['results'], key=lambda x: x.get(sort_key, 'timestamp'), reverse=sort_order == 'desc')
-    return jsonify(results)
+
+    # 更新 data['results']，并保存
+    data['results'] = results
+    save_data(data)
+
+    # 返回完整的 data
+    return jsonify(data)
 
 
 @app.route('/trigger_speed_test', methods=['GET'])
 def trigger_speed_test():
+    # 根据模式决定是否允许手动触发测速
+    if conf.get('mode') == 'default':
+        return jsonify({"message": "Manual speed tests are disabled in default mode"}), 403
+
+    # 校验key
+    check_api_key()
+
     speed_test(triggered_by="manual")
     return jsonify({"message": "Speed test initiated"}), 202
 
@@ -187,7 +234,9 @@ def run_scheduler():
 if __name__ == '__main__':
     # 加载配置
     conf = load_or_create_config()
+
     # 运行测速守护进程
     threading.Thread(target=run_scheduler).start()
+
     # 启动Flask
     app.run(host='0.0.0.0', debug=False, port=conf['port'])

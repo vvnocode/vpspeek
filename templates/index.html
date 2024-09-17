@@ -11,6 +11,7 @@
 <div class="container">
     <h1 id="page-title" class="mt-5">网络速度测试</h1>
     <p id="interval-description">下次执行时间在配置的时间间隔区间（30分钟到60分钟）随机选择</p>
+    <p id="interval-time">下次执行时间：</p>
     <div class="my-3">
         <button id="triggerTest" class="btn btn-primary">手动触发测速测试</button>
     </div>
@@ -45,11 +46,36 @@
 
         // 触发测速测试
         $('#triggerTest').click(function () {
-            $.get('/trigger_speed_test', function (data) {
-                alert(data.message);
-                loadResults(); // 重新加载结果
+            $.ajax({
+                url: '/trigger_speed_test',
+                method: 'GET',
+                success: function (data) {
+                    alert(data.message);
+                    loadResults(); // 重新加载结果
+                },
+                error: function (xhr, status, error) {
+                    // 默认提示信息
+                    let errorMsg = `Error: ${xhr.status} - ${xhr.statusText}`;
+
+                    // 尝试解析后端返回的错误信息字符串
+                    if (xhr.responseText) {
+                        try {
+                            let response = JSON.parse(xhr.responseText);
+                            if (response.message) {
+                                errorMsg = response.message;
+                            }
+                        } catch (e) {
+                            // 若解析失败，使用原始 responseText
+                            errorMsg = xhr.responseText;
+                        }
+                    }
+
+                    // 显示错误信息
+                    alert(errorMsg);
+                }
             });
         });
+
 
         // 排序列点击事件
         $('.sort').click(function (e) {
@@ -74,14 +100,15 @@
 
         // 加载测速结果
         function loadResults() {
-            $.get(`/speeds?sort_by=${currentSort}&sort_order=${currentOrder}`, function (data) {
+            $.get(`/data?sort_by=${currentSort}&sort_order=${currentOrder}`, function (data) {
                 $('#resultsTable').empty(); // 清空表格
-                data.forEach(function (result) {
+                data.results.forEach(function (result) {
                     const triggeredBy = result.triggered_by === 'auto' ? '自动触发' : (result.triggered_by === 'manual' ? '手动触发' : result.triggered_by || '');
                     $('#resultsTable').append(
                         `<tr><td>${result.timestamp}</td><td>${result.file_size_MB}</td><td>${result.time_seconds}</td><td>${result.speed_Mbps}</td><td>${triggeredBy}</td></tr>`
                     );
                 });
+                $('#interval-time').text(`下次执行时间：${data.next_run}`);
             });
         }
 

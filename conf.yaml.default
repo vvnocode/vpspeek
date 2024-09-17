@@ -1,7 +1,14 @@
+# 服务端口
 port: 5000
 speedtest_url: https://speed.cloudflare.com/__down?during=download&bytes=104857600
-#下次执行最快分钟
+# 下次执行最快分钟
 min_interval: 30
-#下次执行最慢分钟
+# 下次执行最慢分钟
 max_interval: 60
+# vps 名称
 vps_name: 我的xx
+# 模式
+# full：完整的功能，调用接口无安全验证；default：无安全验证，但是只能查询，关闭手动测速接口；safe：接口需要在header增加校验，参数为conf.yaml的key；
+mode:
+# 调用接口需要的key
+key:
