@@ -36,15 +36,15 @@ curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'ht
 ```shell
 #分别构建amd64、arm64
 #linux/amd64
-docker build --platform linux/amd64 -t vvnocode/vpspeek:0.1 .
+docker build --platform linux/amd64 -t vvnocode/vpspeek:0.2 .
 #tag
-docker tag vvnocode/vpspeek:0.1 vvnocode/vpspeek:latest
+docker tag vvnocode/vpspeek:0.2 vvnocode/vpspeek:latest
 #推送
-docker push vvnocode/vpspeek:0.1
+docker push vvnocode/vpspeek:0.2
 docker push vvnocode/vpspeek:latest
 
 #linux/arm64
-docker build --platform linux/arm64 -t vvnocode/vpspeek:0.1 .
+docker build --platform linux/arm64 -t vvnocode/vpspeek:0.2 .
 #重复上面操作tag、push
 
 #同时构建amd64、arm64（我的电脑不支持）
@@ -62,7 +62,7 @@ docker push vvnocode/vpspeek:latest
 
 打包命令
 ```shell
-pyinstaller --onefile --add-data "conf.yaml.default:." --add-data "templates:templates" app.py
+pyinstaller --onefile --add-data "conf.yaml.default:." --add-data "templates:templates" --name vpspeek app.py 
 ```
 
 ## 使用

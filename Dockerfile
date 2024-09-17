@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY templates ./templates
 COPY app.py .
-COPY conf.yaml .
+COPY conf.yaml.default .
 
 CMD ["python", "app.py"]
