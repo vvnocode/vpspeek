@@ -1,3 +1,5 @@
+[English](README.en.md)
+
 ## 功能介绍
 
 - 可以自动执行测速，也可以手动执行。
@@ -41,7 +43,11 @@ curl -L https://raw.githubusercontent.com/vvnocode/vpspeek/master/install.sh -o 
 
 ```shell
 docker run --name vpspeek -p 5000:5000 vvnocode/vpspeek:latest
-# 映射文件
+```
+
+映射文件
+
+```shell
 docker run --name vpspeek -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.json -v /mnt/user/appdata/vpspeek/vvnode/conf.yaml:/app/conf.yaml vvnocode/vpspeek:latest
 ```
 
@@ -71,7 +77,10 @@ services:
 
 - 默认配置即可使用，如需修改，请修改conf.yaml。
 - 可以自行配置测速地址，默认是cloudflare的测速地址。
-- 可以对模式进行配置。conf.yaml中，mode默认是default。full：完整的功能，调用接口无安全验证，后续会改为使用密码登录；default：无安全验证，但是只能查询，关闭手动测速接口；safe：接口需要在header增加校验，参数为conf.yaml的key；
+- 可以对模式进行配置。conf.yaml中，mode默认是default。
+    - full：完整的功能，调用接口无安全验证，后续会改为使用密码登录。
+    - default：无安全验证，但是只能查询，关闭手动测速接口。
+    - safe：接口需要在header增加校验，参数为conf.yaml的key。
 - 默认配置在极限情况下，每天测速下载最少为60/max_interval\*24\*100M，当max_interval=60时，每日下载量最多2400M数据。
 - 默认配置在极限情况下，每天测速下载最少为60/min_interval\*24\*100M，当min_interval=30时，每日下载量最多4800M数据。
 - 如果配置合理，任务分散到24小时执行，并不会对服务器造成过大压力。
