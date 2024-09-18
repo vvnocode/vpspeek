@@ -8,7 +8,7 @@ max_interval: 60
 # vps 名称
 vps_name: 我的xx
 # 模式
-# full：完整的功能，调用接口无安全验证；default：无安全验证，但是只能查询，关闭手动测速接口；safe：接口需要在header增加校验，参数为conf.yaml的key；
+# full：完整的功能，调用接口无安全验证，后续会改为使用密码登录；default：无安全验证，但是只能查询，关闭手动测速接口；safe：接口需要在header增加校验，参数为conf.yaml的key；
 mode:
 # 调用接口需要的key
 key:
