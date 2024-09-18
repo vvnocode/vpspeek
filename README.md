@@ -34,7 +34,7 @@ curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'ht
 
 ### 构建
 
-#### 二进制文件
+#### 构建二进制文件
 
 打包命令
 
@@ -42,20 +42,20 @@ curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'ht
 pyinstaller --onefile --add-data "conf.yaml.default:." --add-data "templates:templates" --name vpspeek app.py 
 ```
 
-#### docker
+#### 构建docker镜像
 
 ```shell
 #分别构建amd64、arm64
 #linux/amd64
-docker build --platform linux/amd64 -t vvnocode/vpspeek:0.2 .
+docker build --platform linux/amd64 -t vvnocode/vpspeek:0.3 .
 #tag
-docker tag vvnocode/vpspeek:0.2 vvnocode/vpspeek:latest
+docker tag vvnocode/vpspeek:0.3 vvnocode/vpspeek:latest
 #推送
-docker push vvnocode/vpspeek:0.2
+docker push vvnocode/vpspeek:0.3
 docker push vvnocode/vpspeek:latest
 
 #linux/arm64
-docker build --platform linux/arm64 -t vvnocode/vpspeek:0.2 .
+docker build --platform linux/arm64 -t vvnocode/vpspeek:0.3 .
 #重复上面操作tag、push
 
 #同时构建amd64、arm64（我的电脑不支持）
@@ -71,7 +71,7 @@ docker push vvnocode/vpspeek:latest
 
 ## 使用
 
-### 二进制文件
+### 使用二进制文件一键运行脚本
 
 此脚本运行会自动生成conf.yam配置文件和数据存储data.json文件。
 
@@ -79,17 +79,34 @@ docker push vvnocode/vpspeek:latest
 curl -L https://raw.githubusercontent.com/vvnocode/vpspeek/master/install.sh -o vpspeek.sh && chmod +x vpspeek.sh && sudo ./vpspeek.sh
 ```
 
-### docker
+### 使用docker
+
+- 命令行
 
 ```shell
 docker run --name vpspeek -p 5000:5000 vvnocode/vpspeek:latest
-```
-
-如果需要将测速数据保存或者修改配置，先跑下容器，然后把要映射出来的文件拷贝出来再进行映射。
-
-```shell
+# 映射文件
 docker run --name vpspeek -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.json -v /mnt/user/appdata/vpspeek/vvnode/conf.yaml:/app/conf.yaml vvnocode/vpspeek:latest
 ```
+
+- docker-compose
+
+```yaml
+services:
+  vpspeek:
+    image: vvnocode/vpspeek:latest
+    container_name: vpspeek
+    ports:
+      - "5000:5000"
+    volumes:
+      - /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.json
+      - /mnt/user/appdata/vpspeek/vvnode/conf.yaml:/app/conf.yaml
+    restart: unless-stopped
+```
+
+### 注意
+
+如果需要将测速数据保存或者修改配置，先跑下容器，然后把要映射出来的文件拷贝出来再进行映射。
 
 ### 配置
 
