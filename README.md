@@ -72,8 +72,9 @@ docker push vvnocode/vpspeek:latest
 
 ### 二进制文件
 
+此脚本运行会自动生成conf.yam配置文件和数据存储data.json文件。
+
 ```shell
-# 此脚本运行会自动生成conf.yam配置文件和数据存储data.json文件。
 curl -L https://raw.githubusercontent.com/vvnocode/vpspeek/master/install.sh -o vpspeek.sh && chmod +x vpspeek.sh && sudo ./vpspeek.sh
 ```
 

@@ -7,6 +7,7 @@ import datetime
 import json
 import threading
 import uuid  # 用于生成随机key
+import pytz  # 用于时区转换
 from flask import Flask, jsonify, request, render_template, abort
 
 from ruamel.yaml import YAML
@@ -129,9 +130,12 @@ def speed_test(triggered_by="auto"):
     time_total = float(time_total)  # 下载总用时
     speed_download = (float(speed_download) * 8) / (1024 * 1024)  # 转换为 Mbps
 
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # 获取用户的时区设置并进行时间转换
+    timestamp_utc = datetime.datetime.now(pytz.utc)
+    timestamp_user = convert_time_in_user_timezone(timestamp_utc).strftime('%Y-%m-%d %H:%M:%S')
+
     new_result = {
-        "timestamp": timestamp,
+        "timestamp": timestamp_user,
         "file_size_MB": round(size_download, 2),
         "time_seconds": round(time_total, 2),
         "speed_Mbps": round(speed_download, 2),
@@ -147,7 +151,7 @@ def speed_test(triggered_by="auto"):
 # 设置下一次运行时间
 def set_next_run(data):
     next_run_interval = random.randint(conf['min_interval'], conf['max_interval']) * 60
-    next_run = datetime.datetime.now() + datetime.timedelta(seconds=next_run_interval)
+    next_run = convert_time_in_user_timezone() + datetime.timedelta(seconds=next_run_interval)
     data["next_run"] = next_run.strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -169,6 +173,12 @@ def check_api_key():
         abort(401, description="Unauthorized: Invalid API Key")
 
 
+# 转换为用户时区
+def convert_time_in_user_timezone(time=datetime.datetime.now()):
+    user_timezone = pytz.timezone(conf.get('user_timezone', 'Asia/Shanghai'))  # 获取用户配置的时区
+    return time.astimezone(user_timezone)  # 转换为用户时区的时间
+
+
 # Flask 路由
 @app.route('/')
 def home():
@@ -187,7 +197,8 @@ def get_config():
     return jsonify({
         'min_interval': conf.get('min_interval'),
         'max_interval': conf.get('max_interval'),
-        'vps_name': conf.get('vps_name')
+        'vps_name': conf.get('vps_name'),
+        'user_timezone': conf.get('user_timezone')
     })
 
 

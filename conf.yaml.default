@@ -12,3 +12,5 @@ vps_name: 我的xx
 mode:
 # 调用接口需要的key
 key:
+# 用户时区
+user_timezone: Asia/Shanghai

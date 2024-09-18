@@ -10,10 +10,15 @@
 <body>
 <div class="container">
     <h1 id="page-title" class="mt-5">速度测试</h1>
-    <p id="interval-description">下次执行时间在配置的时间间隔区间（30分钟到60分钟）随机选择</p>
-    <p id="interval-time">下次执行时间：</p>
+    <span>用户时区：</span>
+    <span id="user-timezone"></span>
+    <br/>
+    <span>下次执行时间在配置的时间间隔区间</span>
+    <span id="interval-description"></span>
+    <span id="interval-time"></span>
+    <br/>
     <div class="my-3">
-        <button id="triggerTest" class="btn btn-primary">手动触发测速测试</button>
+        <button id="triggerTest" class="btn btn-primary">手动触发测速</button>
     </div>
     <h2>测速历史记录</h2>
     <table class="table">
@@ -23,7 +28,7 @@
             <th><a href="#" class="sort" data-sort="file_size_MB" style="text-decoration: underline; cursor: pointer;">消耗流量（M）<span id="file_size_MB-order"></span></a></th>
             <th><a href="#" class="sort" data-sort="time_seconds" style="text-decoration: underline; cursor: pointer;">测速耗时（秒）<span id="time_seconds-order"></span></a></th>
             <th><a href="#" class="sort" data-sort="speed_Mbps" style="text-decoration: underline; cursor: pointer;">速度 (Mbps)<span id="speed_Mbps-order"></span></a></th>
-            <th>触发类型</th>
+            <th>触发</th>
         </tr>
         </thead>
         <tbody id="resultsTable">
@@ -40,7 +45,8 @@
         function loadConfig() {
             $.get('/config', function (data) {
                 $('#page-title').text(data.vps_name + '速度测试');
-                $('#interval-description').text(`下次执行时间在配置的时间间隔区间（${data.min_interval}分钟到${data.max_interval}分钟）随机选择`);
+                $('#user-timezone').text(data.user_timezone);
+                $('#interval-description').text(`（${data.min_interval}分钟到${data.max_interval}分钟）随机选择。`);
             });
         }
 
@@ -103,12 +109,12 @@
             $.get(`/data?sort_by=${currentSort}&sort_order=${currentOrder}`, function (data) {
                 $('#resultsTable').empty(); // 清空表格
                 data.results.forEach(function (result) {
-                    const triggeredBy = result.triggered_by === 'auto' ? '自动触发' : (result.triggered_by === 'manual' ? '手动触发' : result.triggered_by || '');
+                    const triggeredBy = result.triggered_by === 'auto' ? '自动' : (result.triggered_by === 'manual' ? '手动' : result.triggered_by || '');
                     $('#resultsTable').append(
                         `<tr><td>${result.timestamp}</td><td>${result.file_size_MB}</td><td>${result.time_seconds}</td><td>${result.speed_Mbps}</td><td>${triggeredBy}</td></tr>`
                     );
                 });
-                $('#interval-time').text(`下次执行时间：${data.next_run}`);
+                $('#interval-time').text(`下次执行时间：${data.next_run}。`);
             });
         }
 
