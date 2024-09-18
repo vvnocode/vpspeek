@@ -132,7 +132,7 @@ def speed_test(triggered_by="auto"):
 
     # 获取用户的时区设置并进行时间转换
     timestamp_utc = datetime.datetime.now(pytz.utc)
-    timestamp_user = convert_time_in_user_timezone(timestamp_utc).strftime('%Y-%m-%d %H:%M:%S')
+    timestamp_user = convert_time_to_user_timezone(timestamp_utc).strftime('%Y-%m-%d %H:%M:%S')
 
     new_result = {
         "timestamp": timestamp_user,
@@ -151,7 +151,7 @@ def speed_test(triggered_by="auto"):
 # 设置下一次运行时间
 def set_next_run(data):
     next_run_interval = random.randint(conf['min_interval'], conf['max_interval']) * 60
-    next_run = convert_time_in_user_timezone() + datetime.timedelta(seconds=next_run_interval)
+    next_run = convert_time_to_user_timezone() + datetime.timedelta(seconds=next_run_interval)
     data["next_run"] = next_run.strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -159,8 +159,10 @@ def set_next_run(data):
 def check_run():
     data = load_data()
     if data["next_run"]:
-        next_run = datetime.datetime.strptime(data["next_run"], '%Y-%m-%d %H:%M:%S')
-        if datetime.datetime.now() >= next_run:
+        next_run_user_time = datetime.datetime.strptime(data["next_run"], '%Y-%m-%d %H:%M:%S')
+        # 将 next_run 转换为有时区信息的 datetime 对象
+        next_run_next_run_user_time_zone = user_timezone().localize(next_run_user_time)
+        if convert_time_to_user_timezone() >= next_run_next_run_user_time_zone:
             speed_test()
     else:
         speed_test()
@@ -173,10 +175,15 @@ def check_api_key():
         abort(401, description="Unauthorized: Invalid API Key")
 
 
+def user_timezone():
+    return pytz.timezone(conf.get('user_timezone', 'Asia/Shanghai'))
+
+
 # 转换为用户时区
-def convert_time_in_user_timezone(time=datetime.datetime.now()):
-    user_timezone = pytz.timezone(conf.get('user_timezone', 'Asia/Shanghai'))  # 获取用户配置的时区
-    return time.astimezone(user_timezone)  # 转换为用户时区的时间
+def convert_time_to_user_timezone(time=None):
+    if time is None:
+        time = datetime.datetime.now(pytz.utc)  # 使用当前的 UTC 时间
+    return time.astimezone(user_timezone())  # 转换为用户时区的时间
 
 
 # Flask 路由
