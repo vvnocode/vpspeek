@@ -10,11 +10,11 @@
 
 输入ip:5000访问
 
-![](https://s1.locimg.com/2024/09/16/fded9aaa22508.png)
+![](https://s1.locimg.com/2024/09/18/42aca6247a94a.png)
 
-### docker运行资源占用
+### 运行资源占用
 
-docker镜像大小在27M左右，运行时占用系统内存25M左右。
+运行时占用系统内存25M左右。
 
 ![](https://s1.locimg.com/2024/09/16/b050a4d1e0127.png)
 
@@ -32,6 +32,14 @@ curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'ht
 - PyCharm
 
 ### 构建
+
+#### 二进制文件
+
+打包命令
+
+```shell
+pyinstaller --onefile --add-data "conf.yaml.default:." --add-data "templates:templates" --name vpspeek app.py 
+```
 
 #### docker
 
@@ -60,14 +68,14 @@ docker push vvnocode/vpspeek:latest
 
 ```
 
-#### 二进制文件
-
-打包命令
-```shell
-pyinstaller --onefile --add-data "conf.yaml.default:." --add-data "templates:templates" --name vpspeek app.py 
-```
-
 ## 使用
+
+### 二进制文件
+
+```shell
+# 此脚本运行会自动生成conf.yam配置文件和数据存储data.json文件。
+curl -L https://raw.githubusercontent.com/vvnocode/vpspeek/master/install.sh -o vpspeek.sh && chmod +x vpspeek.sh && sudo ./vpspeek.sh
+```
 
 ### docker
 
@@ -76,15 +84,9 @@ docker run --name vpspeek -p 5000:5000 vvnocode/vpspeek:latest
 ```
 
 如果需要将测速数据保存或者修改配置，先跑下容器，然后把要映射出来的文件拷贝出来再进行映射。
+
 ```shell
 docker run --name vpspeek -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.json -v /mnt/user/appdata/vpspeek/vvnode/conf.yaml:/app/conf.yaml vvnocode/vpspeek:latest
-```
-
-### 二进制文件
-
-
-```shell
-curl -L https://raw.githubusercontent.com/vvnocode/vpspeek/master/install.sh -o vpspeek.sh && chmod +x vpspeek.sh && sudo ./vpspeek.sh
 ```
 
 ### 配置
