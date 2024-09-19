@@ -46,13 +46,13 @@ jobs:
         with:
           path: dist/
 
-      - name: Verify generated file
+      - name: Move downloaded file
         run: |
-          ls -l dist/
+          mv dist/artifact/* dist/
 
-      - name: Verify generated file
+      - name: Verify file after move
         run: |
-          ls -l dist/artifact/
+          ls dist/
 
       - name: Create Release
         id: create_release
