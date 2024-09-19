@@ -1,16 +1,17 @@
 # Use the appropriate base image
-FROM python:3.9-slim
+FROM python:3.9-alpine
 
 ENV TZ=Asia/Shanghai
 
 # Install system dependencies needed to compile Python packages
-RUN apt-get update && apt-get install -y \
+RUN apk --no-cache add \
+    curl\
     gcc \
-    python3-dev \
+    musl-dev \
     libffi-dev \
-    libssl-dev \
-    make \
-    && rm -rf /var/lib/apt/lists/*
+    openssl-dev \
+    python3-dev \
+    make
 
 # Set the working directory
 WORKDIR /app
