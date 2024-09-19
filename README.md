@@ -8,6 +8,7 @@
 - 可以配置运行模式，防止被人攻击
 - 支持一键安装&升级。
 - 支持配置用户时区，让部署在不同时区vps上的显示更友好。默认用户时区Asia/Shanghai。
+- 支持配置自动更新
 
 ### 页面展示
 
@@ -23,14 +24,12 @@
 - docker镜像大小在27M左右，运行时占用系统内存25M左右。
   ![](https://s1.locimg.com/2024/09/16/b050a4d1e0127.png)
 
-## 使用
-
-### 安装
+## 安装
 
 - 安装到vps上，可以测试国际网络速度。
 - 安装到nas上，可以测试nas从测速地址（可在conf.yaml配置）下载文件的速度。
 
-#### 使用脚本安装
+### 使用脚本安装
 
 此脚本会安装编译好的二进制文件。运行会自动生成conf.yam配置文件和数据存储data.json文件。
 如果更改配置文件conf.yaml，需要运行`systemctl restart vpspeek`重启服务。
@@ -39,7 +38,33 @@
 curl -L https://raw.githubusercontent.com/vvnocode/vpspeek/master/install.sh -o vpspeek.sh && chmod +x vpspeek.sh && sudo ./vpspeek.sh
 ```
 
-#### 使用docker命令行
+#### 自动更新
+
+1. 设置 EDITOR 环境变量为 vim
+
+   `export EDITOR=vim`
+  
+2. 打开 crontab 编辑器
+
+   `crontab -e`
+  
+   如果提示没有vim，可以安装一个。
+  
+   `apt update && apt install vim`
+
+3. 在打开的 vim 编辑器中添加以下行。表示每天6点执行更新。
+
+   `0 6 * * * curl -L https://raw.githubusercontent.com/vvnocode/vpspeek/master/install.sh -o vpspeek.sh && chmod +x vpspeek.sh && sudo ./vpspeek.sh`
+
+4. 保存并退出 vim：
+
+   按 Esc 进入命令模式。 输入 :wq 并回车。
+
+5. 您可以使用以下命令来检查 crontab 定时任务是否正确配置：
+
+   `crontab -l`
+
+### 使用docker命令行
 
 ```shell
 docker run --name vpspeek -p 5000:5000 vvnocode/vpspeek:latest
@@ -51,7 +76,11 @@ docker run --name vpspeek -p 5000:5000 vvnocode/vpspeek:latest
 docker run --name vpspeek -p 5000:5000 -v /mnt/user/appdata/vpspeek/vvnode/data.json:/app/data.json -v /mnt/user/appdata/vpspeek/vvnode/conf.yaml:/app/conf.yaml vvnocode/vpspeek:latest
 ```
 
-#### 使用docker-compose
+#### 自动更新
+
+使用 containrrr/watchtower 实现自动更新
+
+### 使用docker-compose
 
 ```yaml
 services:
@@ -66,14 +95,18 @@ services:
     restart: unless-stopped
 ```
 
-#### 注意
+#### 自动更新
+
+使用 containrrr/watchtower 实现自动更新
+
+### 注意
 
 使用docker安装且需要映射文件的，需要确保映射的宿主机文件存在。
 
 1. 需要创建conf.yaml，可以是空文件。
 2. 需要创建data.json，可以是空文件。
 
-### 配置
+## 配置
 
 - 默认配置即可使用，如需修改，请修改conf.yaml。
 - 可以自行配置测速地址，默认是cloudflare的测速地址。
@@ -103,7 +136,7 @@ curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'ht
 #### 使用GitHub Actions自动构建
 
 - [x] 打tag后自动构建docker并推送到dockerhub。
-- [ ] 打tag后自动构建二进制可执行文件并发布到release页面。
+- [x] 打tag后自动构建二进制可执行文件并发布到release页面。
 
 #### 构建二进制文件
 
