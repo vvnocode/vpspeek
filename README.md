@@ -128,7 +128,7 @@ curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'ht
 
 ### 开发环境
 
-- python 3.9
+- python 3.10
 - PyCharm
 
 ### 构建
