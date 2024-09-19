@@ -100,6 +100,11 @@ curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'ht
 
 ### 构建
 
+#### 使用GitHub Actions自动构建
+
+- [x] 打tag后自动构建docker并推送到dockerhub。
+- [ ] 打tag后自动构建二进制可执行文件并发布到release页面。
+
 #### 构建二进制文件
 
 打包命令
@@ -123,13 +128,4 @@ docker push vvnocode/vpspeek:latest
 #linux/arm64
 docker build --platform linux/arm64 -t vvnocode/vpspeek:0.3 .
 #重复上面操作tag、push
-
-#同时构建amd64、arm64（我的电脑不支持）
-docker buildx create --use
-docker buildx build --platform linux/amd64,linux/arm64 -t vvnocode/vpspeek:0.1 --load .
-#tag
-docker tag vvnocode/vpspeek:0.1 vvnocode/vpspeek:latest
-#推送
-docker push vvnocode/vpspeek:0.1
-docker push vvnocode/vpspeek:latest
 ```
