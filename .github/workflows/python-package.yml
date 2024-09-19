@@ -1,11 +1,7 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Python package
 
 on:
   push:
-    # Publish semver tags as releases.
     tags: [ '**' ]
 
 jobs:
@@ -18,6 +14,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
+          # 必须加''
           python-version: '3.10'
 
       - name: Install dependencies
@@ -30,6 +27,10 @@ jobs:
         run: |
           pyinstaller --onefile --add-data "conf.yaml.default:." --add-data "templates:templates" --name vpspeek app.py
 
+      - name: Verify generated file
+        run: |
+          ls -l dist/
+
       - name: Upload Linux File
         uses: actions/upload-artifact@v3
         with:
@@ -40,8 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ Linux-build-amd64 ]
     steps:
+      - name: Download Linux File
+        uses: actions/download-artifact@v3
 
-      # Create a GitHub Release
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -53,13 +55,12 @@ jobs:
           draft: false
           prerelease: false
 
-      # Upload Release Asset
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/vpspeek
+          asset_path: dist/vpspeek
           asset_name: vpspeek
           asset_content_type: application/octet-stream
