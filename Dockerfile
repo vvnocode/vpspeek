@@ -1,11 +1,10 @@
-# Use the appropriate base image
-FROM python:3.9-alpine
+# Stage 1: Build Stage
+FROM python:3.9-alpine AS build
 
 ENV TZ=Asia/Shanghai
 
 # Install system dependencies needed to compile Python packages
 RUN apk --no-cache add \
-    curl\
     gcc \
     musl-dev \
     libffi-dev \
@@ -16,11 +15,25 @@ RUN apk --no-cache add \
 # Set the working directory
 WORKDIR /app
 
-# Copy the requirements.txt into the image
+# Copy the requirements.txt into the build stage
 COPY requirements.txt requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies in a temporary directory
+RUN pip install --no-cache-dir --target=/install -r requirements.txt
+
+# Stage 2: Final Image
+FROM python:3.9-alpine
+
+ENV TZ=Asia/Shanghai
+
+# Set the working directory
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apk --no-cache add curl
+
+# Copy the installed dependencies from the build stage
+COPY --from=build /install /usr/local/lib/python3.9/site-packages
 
 # Copy the rest of the application code
 COPY templates ./templates
