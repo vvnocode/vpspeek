@@ -114,6 +114,10 @@ def merge_dicts(defaults, overrides):
 
 # 测速函数
 def speed_test(triggered_by="auto"):
+    # 获取用户的时区设置并进行时间转换
+    timestamp_utc = datetime.datetime.now(pytz.utc)
+    timestamp_user = convert_time_to_user_timezone(timestamp_utc).strftime('%Y-%m-%d %H:%M:%S')
+
     result = subprocess.run(
         ["curl", "-o", "/dev/null", "-s", "-w", "%{size_download} %{time_total} %{speed_download}\n",
          conf['speedtest_url']],
@@ -129,10 +133,6 @@ def speed_test(triggered_by="auto"):
     size_download = float(size_download) / (1024 * 1024)  # 转换为 MB
     time_total = float(time_total)  # 下载总用时
     speed_download = (float(speed_download) * 8) / (1024 * 1024)  # 转换为 Mbps
-
-    # 获取用户的时区设置并进行时间转换
-    timestamp_utc = datetime.datetime.now(pytz.utc)
-    timestamp_user = convert_time_to_user_timezone(timestamp_utc).strftime('%Y-%m-%d %H:%M:%S')
 
     new_result = {
         "timestamp": timestamp_user,
