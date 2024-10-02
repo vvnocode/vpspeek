@@ -123,6 +123,9 @@ services:
 基于curl命令下载指定大小的文件达到测速目的。
 
 ```shell
+# 原命令
+curl -o /dev/null 'https://speed.cloudflare.com/__down?during=download&bytes=104857600'
+# 调整下
 curl -o /dev/null -s -w "%{size_download} %{time_total} %{speed_download}\n" 'https://speed.cloudflare.com/__down?during=download&bytes=104857600'
 ```
 
